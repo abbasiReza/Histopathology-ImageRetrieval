@@ -1,0 +1,77 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.optim import lr_scheduler
+from torchvision.transforms import transforms, InterpolationMode
+from torch.utils.data import DataLoader
+from ABE_M_model import ABE_M
+from my_model import se_resnet50
+from resnet import resnet50
+from dataset import SingleData
+from loss_func import ABE_loss, ContrastiveLoss, Ms_loss
+from train_epoch import train_epoch
+from eval_epoch import eval_epoch
+
+def train_and_evaluate():
+    torch.cuda.empty_cache()
+
+    model_name = 'se_resnet'
+    loss_name = 'MsLoss'
+    print('model is {}, loss function is {}'.format(model_name, loss_name))
+
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    epochs = 100
+    batch_size = 32
+    lr = 0.001
+    model_dict = {'ABE_M': ABE_M, 'se_resnet': se_resnet50, 'resnet50': resnet50}
+    loss_dict = {'ABELoss': ABE_loss, 'ContrastiveLoss': ContrastiveLoss, 'MsLoss': Ms_loss}
+
+    model = model_dict[model_name]()
+    if torch.cuda.device_count() > 1:
+        print("Let's use {} GPUs!".format(torch.cuda.device_count()))
+        model = nn.DataParallel(model)
+
+    model.load_state_dict(torch.load('/content/drive/MyDrive/models/MA/CRC/se_resnet_MsLoss_2.0679.pth'))
+    model.to(device)
+
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+    loss_fn = loss_dict[loss_name]()
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=50)
+
+    data_path = '/content/drive/MyDrive/datasets/CRC/train'
+    class_name, train_img_list, eval_img_list = get_data_list(data_path)
+
+    train_transform = transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomVerticalFlip(),
+        transforms.RandomCrop(224),
+        transforms.ToTensor()
+    ])
+    eval_transform = transforms.Compose([
+        transforms.CenterCrop(224),
+        transforms.ToTensor()
+    ])
+    train_transform2 = transforms.Compose([
+        transforms.Resize((224, 224), interpolation=InterpolationMode.BICUBIC),
+        transforms.ColorJitter(brightness=.5, saturation=.25, hue=.1, contrast=.5),
+        transforms.RandomAffine(10, (0.05, 0.05), fill=(255, 255, 255)),
+        transforms.RandomHorizontalFlip(.5),
+        transforms.RandomVerticalFlip(.5),
+        transforms.ToTensor()
+    ])
+
+    torch.cuda.empty_cache()
+
+    train_dataset = SingleData(class_name, train_img_list, train_transform)
+    eval_dataset = SingleData(class_name, eval_img_list, eval_transform)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+    eval_dataloader = DataLoader(eval_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+
+    best = 10000
+    for epoch in range(epochs):
+        torch.cuda.empty_cache()
+        print('epoch {}/{}'.format(epoch, epochs))
+
+        train_epoch(train_dataloader, model, loss_fn, optimizer, device)
+        scheduler.step()
+        best = eval_epoch(eval_dataloader, model, loss_fn, device, best, model_name, loss_name)

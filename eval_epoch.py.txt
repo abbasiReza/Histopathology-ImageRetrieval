@@ -1,0 +1,23 @@
+import os
+import numpy as np
+def eval_epoch(eval_loader, model, loss_fn, device, best, model_name, loss_name):
+    with torch.no_grad():
+        model.eval()
+        val_loss = 0
+        for batch_idx, (data, target, _) in enumerate(eval_loader):
+            data = data.to(device)
+            target = target.to(device)
+
+            output = model(data)
+
+            loss_outputs = loss_fn(output, target)
+            val_loss += loss_outputs.item()
+
+        print('val loss {:.6f}'.format(val_loss/(batch_idx+1)))
+        if best > val_loss/(batch_idx+1):
+            best = val_loss/(batch_idx+1)
+            if torch.cuda.device_count() > 1:
+                torch.save(model.module.state_dict(), '/content/drive/MyDrive/models/MA/CRC/{}_{}_{:.4f}.pth'.format(model_name, loss_name, best))
+            else:
+                torch.save(model.state_dict(), '/content/drive/MyDrive/models/MA/CRC/{}_{}_{:.4f}.pth'.format(model_name, loss_name, best))
+        return best
