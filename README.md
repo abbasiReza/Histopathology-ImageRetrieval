@@ -1,8 +1,11 @@
-# Histopathology Image Retrieval Project
+# Histopathology Image Retrieval Project-MA
 
-![Histopathology Image Retrieval](https://github.com/easonyang1996/DML_HistoImgRetrieval/blob/master/figs/framework.jpeg)
+![Histopathology Image Retrieval]
 
 Welcome to the Histopathology Image Retrieval project! This repository contains code and resources for implementing a deep learning model to perform histopathology image retrieval. The goal of this project is to develop a robust system that can retrieve relevant histopathology images based on user queries. Convolutional models, along with attention mechanisms, are employed to achieve accurate and meaningful image retrieval.
+
+**Note:** This project is based on the research presented in the paper, "A Deep Metric Learning Approach for Histopathological Image Retrieval."
+
 
 ## Table of Contents
 
@@ -60,6 +63,8 @@ Follow these steps to run the histopathology image retrieval model:
 Our retrieval model is built upon convolutional neural networks (CNNs) and attention mechanisms. The CNNs serve as feature extractors, capturing hierarchical features from input images. The attention mechanisms enhance the model's ability to focus on relevant image regions during retrieval.
 
 ![Model Architecture](https://github.com/easonyang1996/DML_HistoImgRetrieval/blob/master/figs/framework.jpeg)
+
+
 
 
 
