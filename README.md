@@ -1,6 +1,6 @@
 # Histopathology Image Retrieval Project-MA
 
-![Histopathology Image Retrieval]
+ 
 
 Welcome to the Histopathology Image Retrieval project! This repository contains code and resources for implementing a deep learning model to perform histopathology image retrieval. The goal of this project is to develop a robust system that can retrieve relevant histopathology images based on user queries. Convolutional models, along with attention mechanisms, are employed to achieve accurate and meaningful image retrieval.
 
